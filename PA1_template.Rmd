@@ -38,13 +38,13 @@ Let's start by calculating the total number of steps for each day and have a loo
 ts <- aggregate(steps ~ date, data = a,  sum)
 str(ts)
 ```
-Before calculating the mean and median, let's have a look of how the total number of steps per day are distributed:
+Before calculating the mean and median, let's have a look of how the total number of steps per day are distributed:  
 ```{r}
 library(ggplot2)
 ggplot() + geom_histogram(data = ts,aes(steps), bins = 11, fill = "red", color = "red", alpha = 0.5) +
            xlab("Number of steps per day")
 ```
-
+  
 The majority of the the total numbers of steps recorded for a given day seems to be around 10000. Let calculate the mean and the median to confirm that:
 ```{r}
 mean(ts$steps)

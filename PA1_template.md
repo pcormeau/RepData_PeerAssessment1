@@ -57,7 +57,7 @@ str(ts)
 ##  $ date : Date, format: "2012-10-02" "2012-10-03" ...
 ##  $ steps: int  126 11352 12116 13294 15420 11015 12811 9900 10304 17382 ...
 ```
-Before calculating the mean and median, let's have a look of how the total number of steps per day are distributed:
+Before calculating the mean and median, let's have a look of how the total number of steps per day are distributed:  
 
 ```r
 library(ggplot2)
@@ -66,7 +66,7 @@ ggplot() + geom_histogram(data = ts,aes(steps), bins = 11, fill = "red", color =
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
-
+  
 The majority of the the total numbers of steps recorded for a given day seems to be around 10000. Let calculate the mean and the median to confirm that:
 
 ```r
