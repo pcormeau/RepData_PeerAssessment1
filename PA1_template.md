@@ -1,11 +1,18 @@
 # Reproducible Research: Peer Assessment 1
 
+## Loading the required libraries
+
+```r
+library(ggplot2) # for plotting the charts
+library(chron) #for dealing with date and time in the dataset
+```
+
 
 ## Loading and preprocessing the data
 Load the data using the `read.csv` standard function:
 
 ```r
-a <- read.csv(unz("activity.zip","activity.csv"))
+a <- read.csv(unz("activity.zip","activity.csv"), stringsAsFactors = FALSE)
 ```
 The data-frame **a** must now contains 17568 observations of 3 variables. Let's check it:
 
@@ -16,28 +23,14 @@ str(a)
 ```
 ## 'data.frame':	17568 obs. of  3 variables:
 ##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
-##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ date    : chr  "2012-10-01" "2012-10-01" "2012-10-01" "2012-10-01" ...
 ##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ```
-The **date** column is of `character` data type. As we will have to deal with it as a date, let's convert **date** to the `Date` data type, then check the results: 
+The **date** column is of `character` data type. As we will have to deal with it as a date, let's convert **date** to the `Date` data type, then check the results (we also make certain the TZ is set to something universal so we have no timezone issues): 
 
 ```r
-library(lubridate)
-```
-
-```
-## 
-## Attaching package: 'lubridate'
-```
-
-```
-## The following object is masked from 'package:base':
-## 
-##     date
-```
-
-```r
-a$date <- ymd(a$date)
+Sys.setenv(TZ='UTC')
+a$date <- as.Date(a$date,"%Y-%m-%d")
 str(a)
 ```
 
@@ -47,11 +40,59 @@ str(a)
 ##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
 ##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ```
+Let's check the interval variable by looking at the 50 first value:
+
+```r
+head(a$interval, 50)
+```
+
+```
+##  [1]   0   5  10  15  20  25  30  35  40  45  50  55 100 105 110 115 120
+## [18] 125 130 135 140 145 150 155 200 205 210 215 220 225 230 235 240 245
+## [35] 250 255 300 305 310 315 320 325 330 335 340 345 350 355 400 405
+```
+What we see here is that the scale is not continuous. We go from 55 to 100 for a 5 minute interval. We need to adjust that so the scale equivalent to a time scale. By looking at the pattern, we see that the last two digit are the minutes from 0 to 55 and that the number for hundreds and probably thousands are the hours as they increment by one after the 55 minutes value. Lets see what appends for a whole day:
+
+```r
+ninter <- 24 * 60 / 5 #24h of 60 minutes devided by 5 to get the number of intervals for 1 day
+head(a$interval, ninter + 1) #+1 to see what happen after midnight
+```
+
+```
+##   [1]    0    5   10   15   20   25   30   35   40   45   50   55  100  105
+##  [15]  110  115  120  125  130  135  140  145  150  155  200  205  210  215
+##  [29]  220  225  230  235  240  245  250  255  300  305  310  315  320  325
+##  [43]  330  335  340  345  350  355  400  405  410  415  420  425  430  435
+##  [57]  440  445  450  455  500  505  510  515  520  525  530  535  540  545
+##  [71]  550  555  600  605  610  615  620  625  630  635  640  645  650  655
+##  [85]  700  705  710  715  720  725  730  735  740  745  750  755  800  805
+##  [99]  810  815  820  825  830  835  840  845  850  855  900  905  910  915
+## [113]  920  925  930  935  940  945  950  955 1000 1005 1010 1015 1020 1025
+## [127] 1030 1035 1040 1045 1050 1055 1100 1105 1110 1115 1120 1125 1130 1135
+## [141] 1140 1145 1150 1155 1200 1205 1210 1215 1220 1225 1230 1235 1240 1245
+## [155] 1250 1255 1300 1305 1310 1315 1320 1325 1330 1335 1340 1345 1350 1355
+## [169] 1400 1405 1410 1415 1420 1425 1430 1435 1440 1445 1450 1455 1500 1505
+## [183] 1510 1515 1520 1525 1530 1535 1540 1545 1550 1555 1600 1605 1610 1615
+## [197] 1620 1625 1630 1635 1640 1645 1650 1655 1700 1705 1710 1715 1720 1725
+## [211] 1730 1735 1740 1745 1750 1755 1800 1805 1810 1815 1820 1825 1830 1835
+## [225] 1840 1845 1850 1855 1900 1905 1910 1915 1920 1925 1930 1935 1940 1945
+## [239] 1950 1955 2000 2005 2010 2015 2020 2025 2030 2035 2040 2045 2050 2055
+## [253] 2100 2105 2110 2115 2120 2125 2130 2135 2140 2145 2150 2155 2200 2205
+## [267] 2210 2215 2220 2225 2230 2235 2240 2245 2250 2255 2300 2305 2310 2315
+## [281] 2320 2325 2330 2335 2340 2345 2350 2355    0
+```
+This confirm our supposition. Let's convert that to a real proportional time interval by converting it into a `times` object of the *chron* library:
+
+```r
+a$interval <- times(((a$interval %% 100) /60 ) + #Minutes in fraction of hours
+                     (a$interval %/% 100) # Hours
+                    ) / 24 #Fraction of a day
+```
 It is better now. We have 3 variables:
 
 *  **steps** : An integer value with the number of steps recorded in a 5 minutes interval.
 *  **date** : The date on which the measurement was taken.
-*  **interval** : An integer representing a identifier for the 5-minute interval in which the measurement was taken.
+*  **interval** : A *time* object representing time after midnight when the measurement was taken.
 
 ## What is mean total number of steps taken per day?
 We will now calculate the mean total number of steps per day. There is two steps to achieve this calculation:
@@ -74,7 +115,6 @@ str(ts)
 Before calculating the mean and median, let's have a look of how the total number of steps per day are distributed:  
 
 ```r
-library(ggplot2)
 ggplot() + geom_histogram(data = ts,aes(steps), bins = 11, fill = "red", color = "red", alpha = 0.5) +
            xlab("Number of steps per day") + ylab("Number of days")
 ```
@@ -100,16 +140,21 @@ median(ts$step)
 ```
 
 ## What is the average daily activity pattern?
-Let's have a look of how the steps are distributed during the day by calculating the average number of steps per 5-minutes intervals and displaying it on a chart:
+Let's have a look of how the steps are distributed during the day by calculating the average number of steps per 5-minutes intervals and displaying it on a chart (as the date part is irrelevant we use an arbitrary date as our initial midnight):
 
 ```r
 ms <- aggregate(steps ~ interval, data = a, mean)
-qplot(interval , steps, data = ms, geom = "line", ylab = "Number of steps")
+ggplot(data = ms) + aes(x = interval,
+                        y = steps) +
+                    geom_line() +
+                    scale_x_chron(format = "%H:%M") +
+                    xlab("Interval") +
+                    ylab("Number of steps")
 ```
 
 ![](PA1_template_files/figure-html/DailyActivityPattern-1.png)<!-- -->
 
-We see a spike in the chart. Let's find it's parameters (by using `()` around an assignment `<-` statement, R will also print the assigned value saving us to explicitly print the variable by retyping its name. This is particulary usefull when you need to use a variable so you can put value in your text as we do below with the interval and number of steps):
+We see a spike in the chart. Let's find it's parameters (by using `()` around an assignment `<-` statement, R will also print the assigned value saving us to explicitly print the variable by retyping its name. This is particularly useful when you need to use a variable so you can put value in your text as we do below with the interval and number of steps):
 
 ```r
 (maxms <- ms[which.max(ms$steps),])
@@ -117,9 +162,9 @@ We see a spike in the chart. Let's find it's parameters (by using `()` around an
 
 ```
 ##     interval    steps
-## 104      835 206.1698
+## 104 08:35:00 206.1698
 ```
-So the average maximum number of steps occurs at the interval **835** with **206** steps on average for that time interval.
+So the average maximum number of steps occurs at the interval **08:35:00** with **206** steps on average for that time interval.
 
 ## Imputing missing values
 There are some missing values in our data-set. This may have an impact on how we should interpret the data. So let's check them. How many NA's do we have:
@@ -238,10 +283,17 @@ mswd <- aggregate(steps ~ interval + wd, data = af, mean)
 
 Finally we compare the average number of steps during the day for the week days and weekend days :
 
+
 ```r
-qplot(interval, steps, data = mswd, facets = "wd ~.", geom = "line", ylab = "Number of steps")
+ggplot(data = mswd) + aes(x = interval,
+                          y = steps) +
+                      geom_line() +
+                      scale_x_chron(format = "%H:%M") +
+                      xlab("Interval") +
+                      ylab("Number of steps") +
+                      facet_grid("wd ~ .")
 ```
 
 ![](PA1_template_files/figure-html/ActivityPatternWeekdaysAndWeekendComparison-1.png)<!-- -->
 
-Looks like we are walking less in the begining of a day during weekend than during the rest of the week. Is it suprinsing?
+Looks like we are walking less in the beginning of a day during weekend than during the rest of the week and more in the afternoon.
