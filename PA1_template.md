@@ -79,7 +79,7 @@ ggplot() + geom_histogram(data = ts,aes(steps), bins = 11, fill = "red", color =
            xlab("Number of steps per day") + ylab("Number of days")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+![](PA1_template_files/figure-html/NumberOfStepsPerDayHistogram-1.png)<!-- -->
   
 The majority of the the total numbers of steps recorded for a given day seems to be around 10000. Let calculate the mean and the median to confirm that:
 
@@ -107,7 +107,7 @@ ms <- aggregate(steps ~ interval, data = a, mean)
 qplot(interval , steps, data = ms, geom = "line", ylab = "Number of steps")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](PA1_template_files/figure-html/DailyActivityPattern-1.png)<!-- -->
 
 We see a spike in the chart. Let's find it's parameters (by using `()` around an assignment `<-` statement, R will also print the assigned value saving us to explicitly print the variable by retyping its name. This is particulary usefull when you need to use a variable so you can put value in your text as we do below with the interval and number of steps):
 
@@ -205,7 +205,7 @@ ggplot() + geom_histogram(data = ts ,aes(steps), bins = 11, color = "red", alpha
            xlab("Number of steps per day") + ylab("Number of days")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](PA1_template_files/figure-html/CompareBeforeAndAfterHistogram-1.png)<!-- -->
 
 By overlaying the two histograms (original in red and, the one where NA has been filled with border in green and fill in gray), we can see that the number of days where the number of steps are all identical but for one bin. The central bin is now higher. 
 Let's compare the means and medians:
@@ -242,6 +242,6 @@ Finally we compare the average number of steps during the day for the week days 
 qplot(interval, steps, data = mswd, facets = "wd ~.", geom = "line", ylab = "Number of steps")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+![](PA1_template_files/figure-html/ActivityPatternWeekdaysAndWeekendComparison-1.png)<!-- -->
 
 Looks like we are walking less in the begining of a day during weekend than during the rest of the week. Is it suprinsing?

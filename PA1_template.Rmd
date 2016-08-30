@@ -39,7 +39,7 @@ ts <- aggregate(steps ~ date, data = a,  sum)
 str(ts)
 ```
 Before calculating the mean and median, let's have a look of how the total number of steps per day are distributed:  
-```{r}
+```{r NumberOfStepsPerDayHistogram}
 library(ggplot2)
 ggplot() + geom_histogram(data = ts,aes(steps), bins = 11, fill = "red", color = "red", alpha = 0.5) +
            xlab("Number of steps per day") + ylab("Number of days")
@@ -53,7 +53,7 @@ median(ts$step)
 
 ## What is the average daily activity pattern?
 Let's have a look of how the steps are distributed during the day by calculating the average number of steps per 5-minutes intervals and displaying it on a chart:
-```{r}
+```{r DailyActivityPattern}
 ms <- aggregate(steps ~ interval, data = a, mean)
 qplot(interval , steps, data = ms, geom = "line", ylab = "Number of steps")
 ```
@@ -102,7 +102,7 @@ Let's check if we still have missing values:
 sum(is.na(af$steps))
 ```
 Good. Now let's compare the total steps per days before and after filling in the missing value
-```{r}
+```{r CompareBeforeAndAfterHistogram}
 tsf <- aggregate(steps ~ date, data = af,  sum)
 ggplot() + geom_histogram(data = ts ,aes(steps), bins = 11, color = "red", alpha = 0.5, fill = "red") +
            geom_histogram(data = tsf,aes(steps), bins = 11, color = "green", alpha = 0.5) +
@@ -131,7 +131,7 @@ mswd <- aggregate(steps ~ interval + wd, data = af, mean)
 ```
 
 Finally we compare the average number of steps during the day for the week days and weekend days :
-```{r}
+```{r ActivityPatternWeekdaysAndWeekendComparison}
 qplot(interval, steps, data = mswd, facets = "wd ~.", geom = "line", ylab = "Number of steps")
 ```
 
